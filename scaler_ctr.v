@@ -18,21 +18,22 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
+`include "network_para.vh"
 
 module scaler_ctr#(
-    parameter FEATURE_WIDTH = 32
+    parameter SCALER_WIDTH = `SCALER_WIDTH
 )(
     input wire                                          clk,
     input wire                                          rst_n,
     input wire                                          state,
-    input wire [9:0]                                    scaler_mem_addr,
-    output wire [FEATURE_WIDTH - 1:0]                   scaler_wire
+    input wire [3:0]                                    scaler_mem_addr,
+    output wire [SCALER_WIDTH - 1:0]                    scaler_wire
     );
-reg                 scaler_mem_enable;
-reg                 scaler_mem_enable_p;
-wire [31:0]         scaler_mem_dout;
-reg                 scaler_wire_ready;
-reg  [31:0]         scaler_buf;
+reg                                     scaler_mem_enable;
+reg                                     scaler_mem_enable_p;
+wire [SCALER_WIDTH - 1:0]               scaler_mem_dout;
+reg                                     scaler_wire_ready;
+reg  [SCALER_WIDTH - 1:0]               scaler_buf;
     
 scaler_mem_gen scaler_mem (
   .clka(clk),    // input wire clka

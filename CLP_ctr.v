@@ -16,25 +16,19 @@
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
-//   conv    788
-//   ip       39
 //////////////////////////////////////////////////////////////////////////////////
-
+`include "network_para.vh"
 
 module CLP_ctr#(
-    parameter Tn = 4,
-    parameter Tm = 8,
-    parameter KERNEL_SIZE = 5,
-    parameter KERNEL_WIDTH = 2,
-    parameter KERNEL_ADD_WIDTH = 15,
-    parameter KERNEL_BUF_ADDR = 10,
+    parameter Tn = `Tn,
+    parameter Tm = `Tm,
+    parameter KERNEL_SIZE = `KERNEL_SIZE,
+    parameter KERNEL_WIDTH = `KERNEL_WIDTH,
 
-    parameter FEATURW_SIZE = 28,
-    parameter FEATURE_WIDTH = 32,
-    parameter FEATURE_ADD_WIDTH = 12,
+    parameter FEATURW_SIZE = `FEATURE_SIZE,
+    parameter FEATURE_WIDTH = `FEATURE_WIDTH,
 
-    parameter SCALER_WIDTH = 32,
-    parameter SCALER_ADD_WIDTH = 2
+    parameter SCALER_WIDTH = `SCALER_WIDTH
 )(
     input   wire                                        clk,
     input   wire                                        rst_n,
@@ -45,10 +39,11 @@ module CLP_ctr#(
 genvar i,j,k,x,y,z;
 
 reg     [3:0]           CLP_type;
+reg     [2:0]           current_kernel_size;
 reg     [14:0]          featrue_mem_init_addr;
 reg     [9:0]           feature_amount;
 reg     [9:0]           weight_mem_init_addr;
-reg     [9:0]           weight_amount;
+//reg     [9:0]           weight_amount;
 reg     [9:0]           scaler_mem_addr;
 reg     [9:0]           output_data_addr_init;
 
@@ -115,38 +110,70 @@ always@(posedge clk or negedge rst_n)
     if(!rst_n)
         CLP_data_ready <= 0;
     else 
-        if(CLP_ctr_cnt == 119)
-            CLP_data_ready <= 1;
-        else if(CLP_ctr_cnt == 788)
-            CLP_data_ready <= 0;
+        if(current_kernel_size == 5)
+            begin
+                if(CLP_ctr_cnt == 7)
+                    CLP_data_ready <= 1;
+                else if(CLP_ctr_cnt == 788)
+                    CLP_data_ready <= 0;
+            end
+        else if(current_kernel_size == 3)
+            begin
+                if(CLP_ctr_cnt == 5)
+                    CLP_data_ready <= 1;
+                else if(CLP_ctr_cnt == 788)
+                    CLP_data_ready <= 0;
+            end
+        else  //current_kernel_size == 1
+            begin
+                if(CLP_ctr_cnt == 1)
+                    CLP_data_ready <= 1;
+                else if(CLP_data_ready == 788)
+                    CLP_data_ready <= 0;
+            end
 
     
 always@(posedge clk or negedge rst_n)
     if(!rst_n)
         CLP_enable <= 0;
     else 
-//        if(CLP_type[3] == 1)
-//            begin
-//                if(CLP_ctr_cnt == 42)
-//                    CLP_enable <= 1;
-//                else
-//                    CLP_enable <= 0;        
-//            end
-//        else
-            begin
-                if(CLP_ctr_cnt == 119)
-                    CLP_enable <= 1;
-                else if(CLP_ctr_cnt >= 788)
-                    CLP_enable <= 0;
-                else        
-                    if(CLP_row_cnt== 22) 
+        begin
+            if(current_kernel_size == 5)
+                begin
+                    if(CLP_ctr_cnt == 7)
+                        CLP_enable <= 1;
+                    else if(CLP_ctr_cnt >= 788)
                         CLP_enable <= 0;
-                    else if(CLP_row_cnt == 26)
-                        CLP_enable <= 1;     
-            end
+                    else        
+                        if(CLP_row_cnt== 22) 
+                            CLP_enable <= 0;
+                        else if(CLP_row_cnt == 26)
+                            CLP_enable <= 1; 
+                end
+            else if(current_kernel_size == 3)
+                begin
+                    if(CLP_ctr_cnt == 5)
+                        CLP_enable <= 1;
+                    else if(CLP_ctr_cnt >= 788)
+                        CLP_enable <= 0;
+                    else        
+                        if(CLP_row_cnt== 24) 
+                            CLP_enable <= 0;
+                        else if(CLP_row_cnt == 26)
+                            CLP_enable <= 1; 
+                end
+            else //current_kernel_size == 1
+                begin
+                    if(CLP_ctr_cnt == 1)
+                        CLP_enable <= 1;
+                    else if(CLP_ctr_cnt >= 788)
+                        CLP_enable <= 0;
+                    else 
+                        ;
+                
+                end
+        end
 
- 
-    
  always@(posedge clk or negedge rst_n)
     if(!rst_n)
         begin
@@ -154,21 +181,23 @@ always@(posedge clk or negedge rst_n)
             featrue_mem_init_addr <= 0;
             feature_amount <= 0;
             weight_mem_init_addr <= 0;
-            weight_amount <= 0;
+          //  weight_amount <= 0;
             scaler_mem_addr <= 0;
-            output_data_addr_init<=0;
+            output_data_addr_init <= 0;
+            current_kernel_size <= 0;
         end   
     else
         begin
             if(state == 1)
                 begin
-                    CLP_type <= instruction[3:0];
-                    featrue_mem_init_addr <= instruction[84:70];
-                    feature_amount <= instruction[69:60];
-                    weight_mem_init_addr <= instruction[59:50];
-                    weight_amount <= instruction[49:40];
-                    scaler_mem_addr <= instruction[39:30];   
-                    output_data_addr_init <= instruction[29:20];           
+                    CLP_type                <= instruction[3:0];
+                    current_kernel_size     <= instruction[6:4];
+                    featrue_mem_init_addr   <= instruction[84:70];
+                    feature_amount          <= instruction[69:60];
+                    weight_mem_init_addr    <= instruction[59:50];
+                  //  weight_amount           <= instruction[49:40];
+                    scaler_mem_addr         <= instruction[33:30];   
+                    output_data_addr_init   <= instruction[29:20];           
                 end
             else
                 ;
@@ -184,7 +213,7 @@ wire  [ Tn * Tm * KERNEL_SIZE * KERNEL_SIZE * KERNEL_WIDTH - 1 : 0 ]            
 featrue_mem_ctr featrue_mem_ctr0(
            .clk(clk),
            .rst_n(rst_n),
-           .CLP_type(CLP_type),
+           .current_kernel_size(current_kernel_size),
            .state(state),
            .feature_amount(feature_amount),
            .featrue_mem_init_addr(featrue_mem_init_addr),
@@ -201,11 +230,12 @@ weight_mem_ctr weight_mem_ctr0(
         .rst_n(rst_n),
         .state(state),
         .weight_mem_init_addr(weight_mem_init_addr),
-        .weight_amount(weight_amount),
         .weight_wire(weight_wire)
     );
 
-scaler_ctr scaler_ctr0(
+scaler_ctr #(
+    .SCALER_WIDTH(SCALER_WIDTH)
+)scaler_ctr0(
         .clk(clk),
         .rst_n(rst_n),
         .state(state),
@@ -213,7 +243,11 @@ scaler_ctr scaler_ctr0(
         .scaler_wire(scaler_wire)
         );
 
-CLP CLP0( 
+CLP #(
+    .FEATURE_WIDTH(FEATURE_WIDTH),
+    .SCALER_WIDTH(SCALER_WIDTH),
+    .BIAS_WIDTH(24)
+)CLP0( 
         .clk(clk),
         .rst_n(rst_n),
         .feature_in(feature_wire),
@@ -223,7 +257,6 @@ CLP CLP0(
         .ctr(CLP_type),
         .addr_clear(CLP_data_ready),
         .enable(CLP_enable),
-        .bias_out_feature_size(24),
         .out_valid(CLP_output_flag),
         .feature_out(CLP_output)
     );

@@ -22,18 +22,18 @@ generate
             always @(posedge CLK)
                 begin
                     if(!RESET)
-                            din_delay[DATA_WIDTH-1:0] <= 0;
+                        din_delay[DATA_WIDTH-1:0] <= 0;
                     else
-                            din_delay[DATA_WIDTH-1:0] <= DIN;
+                        din_delay[DATA_WIDTH-1:0] <= DIN;
                 end
                 for (i=1; i<NUM_STAGES; i=i+1)
                     begin : REGISTER_STAGES
                         always @(posedge CLK)
                             begin
                                 if(!RESET)
-                                        din_delay[i*DATA_WIDTH+:DATA_WIDTH] <= 0;
+                                    din_delay[i*DATA_WIDTH+:DATA_WIDTH] <= 0;
                                 else
-                                        din_delay[i*DATA_WIDTH+:DATA_WIDTH] <= din_delay[(i-1)*DATA_WIDTH+:DATA_WIDTH];
+                                    din_delay[i*DATA_WIDTH+:DATA_WIDTH] <= din_delay[(i-1)*DATA_WIDTH+:DATA_WIDTH];
                             end
                     end
             assign DOUT = din_delay[(NUM_STAGES-1)*DATA_WIDTH+:DATA_WIDTH];

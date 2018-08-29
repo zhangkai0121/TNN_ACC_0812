@@ -25,6 +25,7 @@ module line_buffer#(
     parameter KERNEL_SIZE = `KERNEL_SIZE    
 )(
     input wire                                      clk,
+    input wire                                      rst_n,
     input wire                                      enable,
     input wire                                      line_buffer_mod,
     input wire  [2:0]                               current_kernel_size,
